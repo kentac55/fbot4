@@ -12,6 +12,17 @@ import {
 } from '@speee-js/jsx-slack'
 import { Block, View } from '@slack/web-api'
 
+export const HelloWorld = (): Block[] =>
+  JSXSlack(
+    <Blocks>
+      <Section>
+        <Mrkdwn raw verbatim>
+          ざぁこ :heart: ざこエンジニア :heart
+        </Mrkdwn>
+      </Section>
+    </Blocks>
+  )
+
 export const SimpleTextBlock = ({ s }: { s: string }): Block[] =>
   JSXSlack(
     <Blocks>

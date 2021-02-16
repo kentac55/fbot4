@@ -18,6 +18,7 @@ import {
   MemberLeftNotification,
   SelfIntroduceView,
   SimpleTextBlock,
+  HelloWorld,
 } from './msg'
 import { getUniqueElems } from './util'
 import {
@@ -323,19 +324,32 @@ const channelUnarchiveEventHandler: HandlerFactory<'channel_unarchive'> = ({
 ]
 
 const memberJoinedChannelEventHandler: HandlerFactory<'member_joined_channel'> = ({
-  channel,
   text,
   webClient,
 }) => [
   'member_joined_channel',
   async ({ body, ack }: ListenerFnArg<'member_joined_channel'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: MemberJoinedNotification({
-        userId: body.event.user,
-      }),
-    })
+    const self = (await webClient.auth.test()) as {
+      ok: boolean
+      url: string
+      user: string
+      team_id: string
+      user_id: string
+    }
+
+    await webClient.chat.postMessage(
+      body.event.user === self.user_id
+        ? {
+            channel: body.event.channel,
+            text,
+            blocks: HelloWorld(),
+          }
+        : {
+            channel: body.event.channel,
+            text,
+            blocks: MemberJoinedNotification({ userId: body.event.user }),
+          }
+    )
     await ack()
   },
 ]
