@@ -1,5 +1,8 @@
 import {
   Blocks,
+  Button,
+  ConversationsSelect,
+  DatePicker,
   Divider,
   Header,
   Home,
@@ -9,6 +12,8 @@ import {
   Modal,
   Mrkdwn,
   Section,
+  TimePicker,
+  UsersSelect,
 } from '@speee-js/jsx-slack'
 import { Block, View } from '@slack/web-api'
 
@@ -17,7 +22,7 @@ export const HelloWorld = (): Block[] =>
     <Blocks>
       <Section>
         <Mrkdwn raw verbatim>
-          ざぁこ :heart: ざこエンジニア :heart
+          ざぁこ :heart: ざこエンジニア :heart:
         </Mrkdwn>
       </Section>
     </Blocks>
@@ -262,8 +267,42 @@ export const MemberLeftNotification = ({
 export const HelloView = (): View =>
   JSXSlack(
     <Modal title="hello">
-      <Header>aaa</Header>
-      <Section>bbb</Section>
+      <Header>実験用</Header>
+      <Image
+        alt="好評発売中"
+        title="THE IDOLM@STER MASTER ARTIST 4 07 星井美希(好評発売中)"
+        src="https://images-na.ssl-images-amazon.com/images/I/81R3wBOFOyL._AC_SL1500_.jpg"
+      />
+      <Section>
+        section1: `マジで...！？`
+        <Image
+          alt="好評発売中"
+          title="THE IDOLM@STER MASTER ARTIST 4 07 星井美希(好評発売中)"
+          src="https://images-na.ssl-images-amazon.com/images/I/81R3wBOFOyL._AC_SL1500_.jpg"
+        />
+      </Section>
+      <Section>
+        section2
+        <Button actionId="bomb" value="modalA" style="primary">
+          押すと寿命が30分短くなるけど3000円降ってくるボタン
+        </Button>
+      </Section>
+      <Section>
+        section3: DMを(適量)送りつけます
+        <UsersSelect />
+      </Section>
+      <Section>
+        section4: 中にいるユーザーを全員kickします
+        <ConversationsSelect />
+      </Section>
+      <Section>
+        section5: 昨日の天気
+        <TimePicker />
+      </Section>
+      <Section>
+        section6: 明日の天気
+        <DatePicker />
+      </Section>
     </Modal>
   )
 

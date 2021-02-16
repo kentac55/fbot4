@@ -70,25 +70,35 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({ webClient }) => [
       case 'shortcut': {
         switch (body.callback_id) {
           case 'hello': {
+            console.log('hello')
             webClient.views.open({
               trigger_id: body.trigger_id,
               view: HelloView(),
             })
+            break
           }
           case 'self_introduce': {
+            console.log('self_introduce')
             webClient.views.open({
               trigger_id: body.trigger_id,
               view: SelfIntroduceView(),
             })
+            break
           }
           default: {
             console.log(`unregistered callback: ${body.callback_id}`)
             console.log(body)
           }
         }
+        break
       }
       case 'view_submission': {
         console.log('view_submission')
+        console.log(body)
+        break
+      }
+      default: {
+        console.log(`interactive + unknown`)
         console.log(body)
       }
     }
@@ -104,7 +114,7 @@ const slashCommandHandler: HandlerFactory<'slash_commands'> = ({
   'slash_commands',
   async ({ body, ack }: ListenerFnArg<'slash_commands'>) => {
     try {
-      if (body.command === '/挨拶2') {
+      if (body.command === '/挨拶') {
         if (body.text === 'エンジニア') {
           await webClient.chat.postMessage({
             channel,
@@ -160,14 +170,33 @@ const slashCommandHandler: HandlerFactory<'slash_commands'> = ({
               text: '',
             }),
           })
+        } else if (body.text === 'list') {
+          await webClient.chat.postMessage({
+            channel,
+            text,
+            blocks: Hello({
+              userId: body.user_id,
+              target: 'ユーザー',
+              dialogues: getUniqueElems(getGamerDialogues(), 5),
+              text: '',
+            }),
+          })
         } else {
           await webClient.chat.postMessage({
             channel,
             text,
             blocks: Hello({
               userId: body.user_id,
-              target: 'エンジニア',
-              dialogues: getUniqueElems(getEengineerDialogues(), 5),
+              target: 'ユーザー',
+              dialogues: [
+                'エンジニア',
+                '陰キャ',
+                'こどおじ',
+                'javascript',
+                'ゲーマー',
+              ].map((x) => ({
+                s: `\`/挨拶 ${x}\``,
+              })),
               text: body.text,
             }),
           })
