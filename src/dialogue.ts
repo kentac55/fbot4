@@ -59,6 +59,7 @@ export const get陰キャDialogues = (): Dialogue[] => [
   { s: '喋って無いだけなのに聞き上手だと思われてる' },
   { s: '人間関係リセット癖ある' },
   { s: 'steamのライブラリがソロゲーばっかり' },
+  { s: 'LINEのアカウント持ってない' },
 ]
 
 export const getこどおじDialogues = (): Dialogue[] => [

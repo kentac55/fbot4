@@ -1,10 +1,10 @@
-import { Action, MessageAttachment, View } from '@slack/web-api'
+import { Action, MessageAttachment, Option, View } from '@slack/web-api'
 
 import {
   CallbackKind,
-  EventKind,
   EmojiEventKind,
   EventAPIKind,
+  EventKind,
   InteractiveKind,
 } from './kind'
 
@@ -237,7 +237,60 @@ type ShortCutPayload = {
   trigger_id: string
 }
 
-// WIP
 type ViewSubmissionPayload = {
   type: 'view_submission'
+  team: {
+    // eventにはnameがあるがこっちにはない
+    domain: string
+    id: string
+  }
+  user: {
+    // eventにはnameが無いがこっちにはある
+    id: string
+    username: string
+    name: string
+    team_id: string
+  }
+  view: View
+} & State
+
+type State = DSMState | HelloState
+
+// https://api.slack.com/reference/block-kit/block-elements
+// https://api.slack.com/reference/interaction-payloads/block-actions
+
+type CheckBoxGroupState = {
+  type: 'checkboxes'
+  selected_options: Option[]
+}
+
+type RadioGroupState = {
+  type: 'radio_buttons'
+  selected_option: Option
+}
+
+type DSMState = {
+  view: {
+    external_id: 'DSM'
+    state: {
+      values: {
+        dsmSelect: {
+          dsmSelectAction: CheckBoxGroupState
+        }
+      }
+    }
+  }
+}
+
+type HelloState = {
+  view: {
+    external_id: 'hello'
+    state: {
+      values: {
+        helloPick: {
+          helloPickAction: RadioGroupState
+        }
+      }
+    }
+  }
 }

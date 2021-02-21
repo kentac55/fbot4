@@ -1,4 +1,4 @@
-import { WebClient } from '@slack/web-api'
+import { Block, WebClient } from '@slack/web-api'
 import { SocketModeClient } from '@slack/socket-mode'
 
 import { Message } from './event'
@@ -9,16 +9,17 @@ import {
   ChannelDeletedNotification,
   ChannelRenamedNotification,
   ChannelUnarchivedNotification,
+  DSMView,
   EmojiAddedNotification,
   EmojiRemovedNotification,
   Hello,
-  HelloView,
+  HelloPickView,
+  HelloWorld,
   HomeTabBlock,
   MemberJoinedNotification,
   MemberLeftNotification,
   SelfIntroduceView,
   SimpleTextBlock,
-  HelloWorld,
 } from './msg'
 import { getUniqueElems } from './util'
 import {
@@ -62,18 +63,86 @@ const messageHandler: HandlerFactory<'message'> = () => [
   },
 ]
 
-const interactiveHandler: HandlerFactory<'interactive'> = ({ webClient }) => [
-  'interactive',
+const buildHello = (pattern: string, userId: string): Block[] => {
+  switch (pattern) {
+    case 'エンジニア': {
+      return Hello({
+        userId,
+        target: 'エンジニア',
+        dialogues: getUniqueElems(getEengineerDialogues(), 5),
+        text: '',
+      })
+    }
+    case '陰キャ': {
+      return Hello({
+        userId,
+        target: '陰キャ',
+        dialogues: getUniqueElems(get陰キャDialogues(), 5),
+        text: '',
+      })
+    }
+    case 'こどおじ': {
+      return Hello({
+        userId,
+        target: 'こどおじ',
+        dialogues: getUniqueElems(getこどおじDialogues(), 5),
+        text: '',
+      })
+    }
+    case 'javascript': {
+      return Hello({
+        userId,
+        target: 'エンジニア(javascript)',
+        dialogues: getUniqueElems(getJavascriptDialogues(), 5),
+        text: '',
+      })
+    }
+    case 'ゲーマー': {
+      return Hello({
+        userId,
+        target: 'ゲーマー',
+        dialogues: getUniqueElems(getGamerDialogues(), 5),
+        text: '',
+      })
+    }
+    default: {
+      return Hello({
+        userId,
+        target: 'ユーザー',
+        dialogues: [
+          'エンジニア',
+          '陰キャ',
+          'こどおじ',
+          'javascript',
+          'ゲーマー',
+        ].map((x) => ({
+          s: `\`/挨拶 ${x}\``,
+        })),
+        text: 'へるぷみー',
+      })
+    }
+  }
+}
 
+const interactiveHandler: HandlerFactory<'interactive'> = ({
+  webClient,
+  channel,
+  text,
+}) => [
+  'interactive',
   async ({ body, ack }: ListenerFnArg<'interactive'>) => {
     switch (body.type) {
       case 'shortcut': {
         switch (body.callback_id) {
           case 'hello': {
             console.log('hello')
+            // webClient.views.open({
+            //   trigger_id: body.trigger_id,
+            //   view: HelloView(),
+            // })
             webClient.views.open({
               trigger_id: body.trigger_id,
-              view: HelloView(),
+              view: HelloPickView(),
             })
             break
           }
@@ -82,6 +151,14 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({ webClient }) => [
             webClient.views.open({
               trigger_id: body.trigger_id,
               view: SelfIntroduceView(),
+            })
+            break
+          }
+          case 'dsm': {
+            console.log('dsm executed')
+            webClient.views.open({
+              trigger_id: body.trigger_id,
+              view: DSMView(),
             })
             break
           }
@@ -94,7 +171,30 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({ webClient }) => [
       }
       case 'view_submission': {
         console.log('view_submission')
-        console.log(body)
+        switch (body.view.external_id) {
+          case 'DSM': {
+            console.log(
+              body.view.state.values.dsmSelect.dsmSelectAction.selected_options
+            )
+            break
+          }
+          case 'hello': {
+            await webClient.chat.postMessage({
+              channel,
+              text,
+              blocks: buildHello(
+                body.view.state.values.helloPick.helloPickAction.selected_option
+                  .value || 'help',
+                body.user.id
+              ),
+            })
+            break
+          }
+          default: {
+            const _: never = body.view
+            return _
+          }
+        }
         break
       }
       default: {
@@ -108,103 +208,21 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({ webClient }) => [
 
 const slashCommandHandler: HandlerFactory<'slash_commands'> = ({
   webClient,
-  channel,
   text,
 }) => [
   'slash_commands',
   async ({ body, ack }: ListenerFnArg<'slash_commands'>) => {
     try {
       if (body.command === '/挨拶') {
-        if (body.text === 'エンジニア') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'エンジニア',
-              dialogues: getUniqueElems(getEengineerDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else if (body.text === '陰キャ') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: '陰キャ',
-              dialogues: getUniqueElems(get陰キャDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else if (body.text === 'こどおじ') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'こどおじ',
-              dialogues: getUniqueElems(getこどおじDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else if (body.text.toLowerCase() === 'javascript') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'エンジニア(javascript)',
-              dialogues: getUniqueElems(getJavascriptDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else if (body.text === 'ゲーマー') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'ゲーマー',
-              dialogues: getUniqueElems(getGamerDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else if (body.text === 'list') {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'ユーザー',
-              dialogues: getUniqueElems(getGamerDialogues(), 5),
-              text: '',
-            }),
-          })
-        } else {
-          await webClient.chat.postMessage({
-            channel,
-            text,
-            blocks: Hello({
-              userId: body.user_id,
-              target: 'ユーザー',
-              dialogues: [
-                'エンジニア',
-                '陰キャ',
-                'こどおじ',
-                'javascript',
-                'ゲーマー',
-              ].map((x) => ({
-                s: `\`/挨拶 ${x}\``,
-              })),
-              text: body.text,
-            }),
-          })
-        }
+        await webClient.chat.postMessage({
+          channel: body.channel_id,
+          text,
+          blocks: buildHello(body.text, body.user_id),
+        })
         await ack()
       } else {
         await webClient.chat.postMessage({
-          channel,
+          channel: body.channel_id,
           text,
           blocks: SimpleTextBlock({
             s: `unregistered slash command: ${body.command}`,

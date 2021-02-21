@@ -1,6 +1,8 @@
 import {
   Blocks,
   Button,
+  Checkbox,
+  CheckboxGroup,
   ConversationsSelect,
   DatePicker,
   Divider,
@@ -11,6 +13,8 @@ import {
   JSXSlack,
   Modal,
   Mrkdwn,
+  RadioButton,
+  RadioButtonGroup,
   Section,
   TimePicker,
   UsersSelect,
@@ -303,6 +307,53 @@ export const HelloView = (): View =>
         section6: 明日の天気
         <DatePicker />
       </Section>
+    </Modal>
+  )
+
+export const DSMView = (): View =>
+  JSXSlack(
+    <Modal title="DSM" externalId="DSM">
+      <Header>DSM</Header>
+      <CheckboxGroup
+        blockId="dsmSelect"
+        actionId="dsmSelectAction"
+        label="参加者"
+        required
+      >
+        <Checkbox value="t" checked>
+          T
+        </Checkbox>
+        <Checkbox value="m" checked>
+          M
+        </Checkbox>
+        <Checkbox value="a" checked>
+          A
+        </Checkbox>
+        <Checkbox value="f" checked>
+          F
+        </Checkbox>
+      </CheckboxGroup>
+    </Modal>
+  )
+
+export const HelloPickView = (): View =>
+  JSXSlack(
+    <Modal title="挨拶" externalId="hello">
+      <Header>挨拶してくれるよ！</Header>
+      <RadioButtonGroup
+        label="abc"
+        blockId="helloPick"
+        actionId="helloPickAction"
+      >
+        <RadioButton value="エンジニア">エンジニア</RadioButton>
+        <RadioButton value="陰キャ">陰キャ</RadioButton>
+        <RadioButton value="こどおじ">こどおじ</RadioButton>
+        <RadioButton value="javascript">javascripかきかき</RadioButton>
+        <RadioButton value="ゲーマー">ゲーマー</RadioButton>
+        <RadioButton value="help" checked>
+          へるぷみー
+        </RadioButton>
+      </RadioButtonGroup>
     </Modal>
   )
 
