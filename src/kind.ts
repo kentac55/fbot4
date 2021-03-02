@@ -326,5 +326,6 @@ export type InteractiveKind =
   | 'message_action'
   | 'shortcut'
   | 'view_submission'
+  | 'view_closed'
 
-export type CallbackKind = 'hello' | 'self_introduce' | 'dsm'
+export type CallbackKind = 'hello' | 'self_introduce' | 'dsm' | 'start'

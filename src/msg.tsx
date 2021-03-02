@@ -1,4 +1,5 @@
 import {
+  Actions,
   Blocks,
   Button,
   Checkbox,
@@ -30,6 +31,50 @@ export const HelloWorld = (): Block[] =>
         </Mrkdwn>
       </Section>
     </Blocks>
+  )
+
+export const Invite = (): Block[] =>
+  JSXSlack(
+    <Blocks>
+      <Section>
+        <Mrkdwn verbatim raw>
+          今日のハンガーフライトのご来場お待ちしており
+        </Mrkdwn>
+      </Section>
+    </Blocks>
+  )
+
+export const Invite2 = (): Block[] =>
+  JSXSlack(
+    <Blocks>
+      <Section>
+        <Mrkdwn verbatim raw>
+          参りましたハンガーフライトの講師やってください
+        </Mrkdwn>
+      </Section>
+    </Blocks>
+  )
+
+export const Invite3 = (): View =>
+  JSXSlack(
+    <Modal title="！">
+      <Section>
+        <Mrkdwn verbatim raw>
+          とかとか共有する予定です！ぜひ来てください！
+        </Mrkdwn>
+      </Section>
+    </Modal>
+  )
+
+export const Invite4 = (): View =>
+  JSXSlack(
+    <Modal title="？">
+      <Section>
+        <Mrkdwn verbatim raw>
+          ハンガーフライトでなにか共有しませんか？
+        </Mrkdwn>
+      </Section>
+    </Modal>
   )
 
 export const SimpleTextBlock = ({ s }: { s: string }): Block[] =>
@@ -369,5 +414,94 @@ export const SelfIntroduceView = (): View =>
         required
       />
       <Input type="submit" value="Send" />
+    </Modal>
+  )
+
+export const CallStartView = (): View =>
+  JSXSlack(
+    <Modal title="広告するよ" externalId="ad">
+      <Header>広告先選んでね</Header>
+      <Section blockId="conv">
+        送付先
+        <ConversationsSelect initialConversation="current" actionId="select" />
+      </Section>
+      <Input type="submit" value="Send" />
+    </Modal>
+  )
+
+export const StartMsg = (): Block[] =>
+  JSXSlack(
+    <Blocks>
+      <Header>ハンガーフライトやります</Header>
+      <Divider />
+      <Section>
+        <Mrkdwn>
+          今日はslack
+          appについて共有します。最近slackに新しい機能が入ってこういうイケイケ画面を作りやすくなっていたりします。{' '}
+        </Mrkdwn>
+      </Section>
+      <Section>
+        <Mrkdwn>せっかくなのでslack常識クイズです</Mrkdwn>
+      </Section>
+      <Actions>
+        <Button actionId="ktkr" value="クイズに付き合う" style="danger">
+          クイズに付き合う
+        </Button>
+      </Actions>
+    </Blocks>
+  )
+
+export const QuizView = (): View =>
+  JSXSlack(
+    <Modal title="クイズです" externalId="quizResult1">
+      <Header>
+        Slackの機能には色々ありますが、中にはdeprecatedな機能もあります。下記からdeprecatedなものを全て選んでください
+      </Header>
+      <CheckboxGroup
+        blockId="quizSelect"
+        actionId="quizAction"
+        label="deprecatedはどれ？"
+      >
+        <Checkbox value="im">incoming message</Checkbox>
+        <Checkbox value="bot">bot user</Checkbox>
+        <Checkbox value="slash">slash commands</Checkbox>
+        <Checkbox value="om">outgoing message</Checkbox>
+        <Checkbox value="emoji">emojiを取得するAPI(`emoji.list`)</Checkbox>
+        <Checkbox value="kick">ユーザーをkickするAPI(`channels.kick`)</Checkbox>
+      </CheckboxGroup>
+    </Modal>
+  )
+
+export const QuizView2 = (): View =>
+  JSXSlack(
+    <Modal title="クイズの答えは・・・" externalId="ans">
+      <Header>
+        だらららららららららら:drum_with_drumsticks::drum_with_drumsticks::drum_with_drumsticks::drum_with_drumsticks:
+      </Header>
+      <Image
+        alt="drum"
+        title="ドラムです"
+        src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/google/274/drum_1f941.png"
+      />
+    </Modal>
+  )
+
+export const QuizView3 = ({ ans }: { ans: string[] }): View =>
+  JSXSlack(
+    <Modal title="後で埋める">
+      <Header>ハンガーフライトで答え合わせ！</Header>
+      <Section>
+        <Mrkdwn raw verbatim>
+          みんな来てね :hugging_face:
+        </Mrkdwn>
+        <Image
+          alt="welcome"
+          title="yay"
+          src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/google/3/face-throwing-a-kiss_1f618.png"
+        />
+      </Section>
+      <Section>
+        <Mrkdwn raw verbatim>{`あなたの答え: \n${ans.join('\n')}`}</Mrkdwn>
+      </Section>
     </Modal>
   )

@@ -14,6 +14,10 @@ export type Message<T> = T extends EventAPIKind
   ? { type: InteractiveKind } & InteractivePayload
   : T extends 'slash_commands'
   ? SlashCommandPayload
+  : T extends 'block_actions'
+  ? BlockActionsPayload
+  : T extends 'view_closed'
+  ? ModalCancelPayload
   : never
 
 type EventMessage<T> = {
@@ -208,6 +212,13 @@ type InteractivePayload =
   | ShortCutPayload
   | ViewSubmissionPayload
 
+type Container = {
+  type: string
+  message_ts: string
+  channel_id: string
+  is_ephemeral: boolean
+}
+
 type BlockActionsPayload = {
   type: 'block_actions'
   trigger_id: string
@@ -218,6 +229,7 @@ type BlockActionsPayload = {
   message: {
     bot_id: string
   }
+  container: Container
 }
 
 // WIP
@@ -252,9 +264,23 @@ type ViewSubmissionPayload = {
     team_id: string
   }
   view: View
+  trigger_id: string
 } & State
 
-type State = DSMState | HelloState
+type ModalCancelPayload = {
+  type: 'view_closed'
+  team: {
+    domain: string
+    id: string
+  }
+  user: {
+    id: string
+    name: string
+  }
+  view: View
+}
+
+type State = DSMState | HelloState | AdState | QuizState
 
 // https://api.slack.com/reference/block-kit/block-elements
 // https://api.slack.com/reference/interaction-payloads/block-actions
@@ -267,6 +293,11 @@ type CheckBoxGroupState = {
 type RadioGroupState = {
   type: 'radio_buttons'
   selected_option: Option
+}
+
+type ConversationsSelect = {
+  type: 'conversations_select'
+  selected_conversation: string
 }
 
 type DSMState = {
@@ -289,6 +320,32 @@ type HelloState = {
       values: {
         helloPick: {
           helloPickAction: RadioGroupState
+        }
+      }
+    }
+  }
+}
+
+type AdState = {
+  view: {
+    external_id: 'ad'
+    state: {
+      values: {
+        conv: {
+          select: ConversationsSelect
+        }
+      }
+    }
+  }
+}
+
+type QuizState = {
+  view: {
+    external_id: 'quizResult1'
+    state: {
+      values: {
+        quizSelect: {
+          quizAction: CheckBoxGroupState
         }
       }
     }

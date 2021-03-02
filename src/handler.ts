@@ -20,8 +20,15 @@ import {
   MemberLeftNotification,
   SelfIntroduceView,
   SimpleTextBlock,
+  StartMsg,
+  CallStartView,
+  Invite3,
+  Invite4,
+  QuizView,
+  QuizView2,
+  QuizView3,
 } from './msg'
-import { getUniqueElems } from './util'
+import { getUniqueElems, sleep } from './util'
 import {
   getEengineerDialogues,
   getGamerDialogues,
@@ -131,6 +138,7 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
 }) => [
   'interactive',
   async ({ body, ack }: ListenerFnArg<'interactive'>) => {
+    await ack()
     switch (body.type) {
       case 'shortcut': {
         switch (body.callback_id) {
@@ -162,6 +170,13 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
             })
             break
           }
+          case 'start': {
+            console.log('start executed')
+            webClient.views.open({
+              trigger_id: body.trigger_id,
+              view: CallStartView(),
+            })
+          }
           default: {
             console.log(`unregistered callback: ${body.callback_id}`)
             console.log(body)
@@ -190,11 +205,85 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
             })
             break
           }
+          case 'ad': {
+            console.log(
+              body.view.state.values.conv.select.selected_conversation
+            )
+            await webClient.chat.postMessage({
+              channel: body.view.state.values.conv.select.selected_conversation,
+              text,
+              blocks: StartMsg(),
+            })
+            break
+          }
+          case 'quizResult1': {
+            console.log('quiz-a')
+            await sleep(1000)
+            // await webClient.views.open({
+            //   trigger_id: body.trigger_id,
+            //   view: QuizView2(),
+            // })
+            await webClient.views.open({
+              trigger_id: body.trigger_id,
+              view: QuizView3({
+                ans: body.view.state.values.quizSelect.quizAction.selected_options.map(
+                  (o) => o.text.text
+                ),
+              }),
+            })
+            break
+          }
           default: {
+            console.log(body)
             const _: never = body.view
             return _
           }
         }
+        break
+      }
+      case 'block_actions': {
+        console.log('block_actions')
+        body.actions.forEach(async (action) => {
+          switch (action.action_id) {
+            case 'ktkr': {
+              console.log('ktkr')
+              await webClient.views.open({
+                trigger_id: body.trigger_id,
+                view: QuizView(),
+              })
+              break
+            }
+            case 'yes': {
+              // webClient.chat.postEphemeral({
+              //   user: body.user.id,
+              //   channel: body.container.channel_id,
+              //   text,
+              //   blocks: Invite(),
+              // })
+              webClient.views.open({
+                trigger_id: body.trigger_id,
+                view: Invite3(),
+              })
+              break
+            }
+            case 'no': {
+              webClient.views.open({
+                trigger_id: body.trigger_id,
+                view: Invite4(),
+              })
+              // webClient.chat.postEphemeral({
+              //   user: body.user.id,
+              //   channel: body.container.channel_id,
+              //   text,
+              //   blocks: Invite2(),
+              // })
+              break
+            }
+            default: {
+              console.log(`unregistered: ${action.action_id}`)
+            }
+          }
+        })
         break
       }
       default: {
@@ -202,7 +291,6 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
         console.log(body)
       }
     }
-    await ack()
   },
 ]
 
