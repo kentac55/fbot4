@@ -501,7 +501,9 @@ export const QuizView3 = ({ ans }: { ans: string[] }): View =>
         />
       </Section>
       <Section>
-        <Mrkdwn raw verbatim>{`あなたの答え: \n${ans.join('\n')}`}</Mrkdwn>
+        <Mrkdwn raw verbatim>{`あなたの答え: \n${
+          ans.length === 0 ? '該当なし' : ans.join('\n')
+        }`}</Mrkdwn>
       </Section>
     </Modal>
   )
