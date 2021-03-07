@@ -21,6 +21,7 @@ import {
   UsersSelect,
 } from '@speee-js/jsx-slack'
 import { Block, View } from '@slack/web-api'
+import { shuffle } from './util'
 
 export const HelloWorld = (): Block[] =>
   JSXSlack(
@@ -355,6 +356,26 @@ export const HelloView = (): View =>
     </Modal>
   )
 
+export const DSMMessage = ({ users }: { users: string[] }): Block[] => {
+  const f = users[Math.floor(Math.random() * users.length)]
+  const shuffled = shuffle(users)
+  return JSXSlack(
+    <Blocks>
+      <Header>DSMはーじまーるよー</Header>
+      <Section>
+        <Mrkdwn raw verbatim>
+          {`進行役よろ: \`${f}\``}
+        </Mrkdwn>
+      </Section>
+      <Section>
+        <Mrkdwn raw verbatim>
+          {`順番: \`${shuffled.join(', ')}\``}
+        </Mrkdwn>
+      </Section>
+    </Blocks>
+  )
+}
+
 export const DSMView = (): View =>
   JSXSlack(
     <Modal title="DSM" externalId="DSM">
@@ -453,7 +474,7 @@ export const StartMsg = (): Block[] =>
 
 export const QuizView = (): View =>
   JSXSlack(
-    <Modal title="クイズです" externalId="quizResult1">
+    <Modal title="クイズです" externalId="quizResult1" submit="これでおｋ">
       <Header>
         Slackの機能には色々ありますが、中にはdeprecatedな機能もあります。下記からdeprecatedなものを全て選んでください
       </Header>
@@ -472,23 +493,29 @@ export const QuizView = (): View =>
     </Modal>
   )
 
-export const QuizView2 = (): View =>
+export const QuizView2 = ({ meta }: { meta: string }): View =>
   JSXSlack(
-    <Modal title="クイズの答えは・・・" externalId="ans">
+    <Modal title="クイズの答えは・・・" externalId="ans" privateMetadata={meta}>
       <Header>
         だらららららららららら:drum_with_drumsticks::drum_with_drumsticks::drum_with_drumsticks::drum_with_drumsticks:
       </Header>
       <Image
         alt="drum"
-        title="ドラムです"
+        title="どう見てもドラムです"
         src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/google/274/drum_1f941.png"
       />
+      <Section blockId="getResultBlock">
+        <Mrkdwn>答えを見る？</Mrkdwn>
+        <Button style="primary" actionId="getResultAction">
+          答えを見る
+        </Button>
+      </Section>
     </Modal>
   )
 
 export const QuizView3 = ({ ans }: { ans: string[] }): View =>
   JSXSlack(
-    <Modal title="後で埋める">
+    <Modal title="こういう集客嫌い">
       <Header>ハンガーフライトで答え合わせ！</Header>
       <Section>
         <Mrkdwn raw verbatim>
@@ -505,5 +532,12 @@ export const QuizView3 = ({ ans }: { ans: string[] }): View =>
           ans.length === 0 ? '該当なし' : ans.join('\n')
         }`}</Mrkdwn>
       </Section>
+    </Modal>
+  )
+
+export const UndeletableView = (): View =>
+  JSXSlack(
+    <Modal title="ダメです">
+      <Header>fbot4の投稿じゃないと消せねﾝだわ</Header>
     </Modal>
   )

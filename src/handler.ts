@@ -4,11 +4,13 @@ import { SocketModeClient } from '@slack/socket-mode'
 import { Message } from './event'
 import { EventKind, EventAPIKind } from './kind'
 import {
+  CallStartView,
   ChannelArchivedNotification,
   ChannelCreatedNotification,
   ChannelDeletedNotification,
   ChannelRenamedNotification,
   ChannelUnarchivedNotification,
+  DSMMessage,
   DSMView,
   EmojiAddedNotification,
   EmojiRemovedNotification,
@@ -16,17 +18,17 @@ import {
   HelloPickView,
   HelloWorld,
   HomeTabBlock,
-  MemberJoinedNotification,
-  MemberLeftNotification,
-  SelfIntroduceView,
-  SimpleTextBlock,
-  StartMsg,
-  CallStartView,
   Invite3,
   Invite4,
+  MemberJoinedNotification,
+  MemberLeftNotification,
   QuizView,
   QuizView2,
   QuizView3,
+  SelfIntroduceView,
+  SimpleTextBlock,
+  StartMsg,
+  UndeletableView,
 } from './msg'
 import { getUniqueElems, sleep } from './util'
 import {
@@ -148,7 +150,7 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
             //   trigger_id: body.trigger_id,
             //   view: HelloView(),
             // })
-            webClient.views.open({
+            await webClient.views.open({
               trigger_id: body.trigger_id,
               view: HelloPickView(),
             })
@@ -156,7 +158,7 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
           }
           case 'self_introduce': {
             console.log('self_introduce')
-            webClient.views.open({
+            await webClient.views.open({
               trigger_id: body.trigger_id,
               view: SelfIntroduceView(),
             })
@@ -164,7 +166,7 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
           }
           case 'dsm': {
             console.log('dsm executed')
-            webClient.views.open({
+            await webClient.views.open({
               trigger_id: body.trigger_id,
               view: DSMView(),
             })
@@ -172,7 +174,7 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
           }
           case 'start': {
             console.log('start executed')
-            webClient.views.open({
+            await webClient.views.open({
               trigger_id: body.trigger_id,
               view: CallStartView(),
             })
@@ -191,6 +193,15 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
             console.log(
               body.view.state.values.dsmSelect.dsmSelectAction.selected_options
             )
+            await webClient.chat.postMessage({
+              channel,
+              text,
+              blocks: DSMMessage({
+                users: body.view.state.values.dsmSelect.dsmSelectAction.selected_options.map(
+                  (x) => x.text.text
+                ),
+              }),
+            })
             break
           }
           case 'hello': {
@@ -219,16 +230,23 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
           case 'quizResult1': {
             console.log('quiz-a')
             await sleep(1000)
-            // await webClient.views.open({
-            //   trigger_id: body.trigger_id,
-            //   view: QuizView2(),
-            // })
+            await webClient.views.open({
+              trigger_id: body.trigger_id,
+              view: QuizView2({
+                meta: body.view.state.values.quizSelect.quizAction.selected_options
+                  .map((o) => o.text.text)
+                  .join(','),
+              }),
+            })
+            break
+          }
+          case 'ans': {
+            console.log('ans')
+            await sleep(1000)
             await webClient.views.open({
               trigger_id: body.trigger_id,
               view: QuizView3({
-                ans: body.view.state.values.quizSelect.quizAction.selected_options.map(
-                  (o) => o.text.text
-                ),
+                ans: body.view.private_metadata.split(','),
               }),
             })
             break
@@ -253,6 +271,16 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
               })
               break
             }
+            case 'getResultAction': {
+              console.log('getResultAction')
+              await webClient.views.update({
+                external_id: body.view.external_id,
+                view: QuizView3({
+                  ans: body.view.private_metadata?.split(',') ?? [],
+                }),
+              })
+              break
+            }
             case 'yes': {
               // webClient.chat.postEphemeral({
               //   user: body.user.id,
@@ -260,14 +288,14 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
               //   text,
               //   blocks: Invite(),
               // })
-              webClient.views.open({
+              await webClient.views.open({
                 trigger_id: body.trigger_id,
                 view: Invite3(),
               })
               break
             }
             case 'no': {
-              webClient.views.open({
+              await webClient.views.open({
                 trigger_id: body.trigger_id,
                 view: Invite4(),
               })
@@ -284,6 +312,30 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
             }
           }
         })
+        break
+      }
+      case 'message_action': {
+        console.log('message action')
+        switch (body.callback_id) {
+          case 'bomb': {
+            if (body.message.bot_profile?.name === 'fbot4') {
+              await webClient.chat.delete({
+                channel: body.channel.id,
+                ts: body.message.ts,
+              })
+            } else {
+              await webClient.views.open({
+                trigger_id: body.trigger_id,
+                view: UndeletableView(),
+              })
+            }
+            break
+          }
+          default: {
+            console.log(`unregistered message action: ${body.callback_id}`)
+            console.log(body)
+          }
+        }
         break
       }
       default: {

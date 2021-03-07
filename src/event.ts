@@ -1,4 +1,4 @@
-import { Action, MessageAttachment, Option, View } from '@slack/web-api'
+import { Action, Block, MessageAttachment, Option, View } from '@slack/web-api'
 
 import {
   CallbackKind,
@@ -230,11 +230,51 @@ type BlockActionsPayload = {
     bot_id: string
   }
   container: Container
+  view: View
 }
 
-// WIP
 type MessageActionPayload = {
   type: 'message_action'
+  token: string
+  action_ts: string
+  team: {
+    id: string
+    domain: string
+  }
+  user: {
+    id: string
+    username: string
+    team_id: string
+    name: string
+  }
+  channel: {
+    id: string
+    name: string
+  }
+  is_enterprise_install: boolean
+  enterprise: string | null
+  callback_id: string
+  trigger_id: string
+  response_url: string
+  message_ts: string
+  message: {
+    bot_id?: string
+    type: 'message'
+    text: string
+    user: string
+    ts: string
+    team: string
+    bot_profile?: {
+      id: string
+      deleted: boolean
+      name: string
+      updated: number
+      app_id: string
+      // icons: [Object]
+      team_id: string
+    }
+    blocks: Block[]
+  }
 }
 
 type ShortCutPayload = {
@@ -280,7 +320,7 @@ type ModalCancelPayload = {
   view: View
 }
 
-type State = DSMState | HelloState | AdState | QuizState
+type State = DSMState | HelloState | AdState | QuizState | AnsState
 
 // https://api.slack.com/reference/block-kit/block-elements
 // https://api.slack.com/reference/interaction-payloads/block-actions
@@ -349,5 +389,12 @@ type QuizState = {
         }
       }
     }
+  }
+}
+
+type AnsState = {
+  view: {
+    external_id: 'ans'
+    private_metadata: string
   }
 }

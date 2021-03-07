@@ -28,3 +28,11 @@ export const getAgent = (): Agent | undefined => {
 
 export const sleep = (msec: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, msec))
+
+export const shuffle = <T>(arr: T[]): T[] => {
+  for (let i = arr.length; 1 < i; i--) {
+    const k = Math.floor(Math.random() * i)
+    ;[arr[k], arr[i - 1]] = [arr[i - 1], arr[k]]
+  }
+  return arr
+}
