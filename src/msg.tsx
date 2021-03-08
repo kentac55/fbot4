@@ -380,6 +380,13 @@ export const DSMView = (): View =>
   JSXSlack(
     <Modal title="DSM" externalId="DSM">
       <Header>DSM</Header>
+      <ConversationsSelect
+        blockId="dsmConvSelect"
+        actionId="dsmConvAction"
+        label="投げ先"
+        initialConversation="current"
+        required
+      />
       <CheckboxGroup
         blockId="dsmSelect"
         actionId="dsmSelectAction"

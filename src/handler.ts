@@ -190,11 +190,10 @@ const interactiveHandler: HandlerFactory<'interactive'> = ({
         console.log('view_submission')
         switch (body.view.external_id) {
           case 'DSM': {
-            console.log(
-              body.view.state.values.dsmSelect.dsmSelectAction.selected_options
-            )
             await webClient.chat.postMessage({
-              channel,
+              channel:
+                body.view.state.values.dsmConvSelect.dsmConvAction
+                  .selected_conversation,
               text,
               blocks: DSMMessage({
                 users: body.view.state.values.dsmSelect.dsmSelectAction.selected_options.map(

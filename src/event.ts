@@ -348,6 +348,9 @@ type DSMState = {
         dsmSelect: {
           dsmSelectAction: CheckBoxGroupState
         }
+        dsmConvSelect: {
+          dsmConvAction: ConversationsSelect
+        }
       }
     }
   }
