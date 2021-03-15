@@ -56,7 +56,7 @@ const text = 'あ〜テスト！'
 //   }
 // }
 
-const l = pino()
+const logger = pino()
 const agent = getAgent()
 const socketClient = new SocketModeClient({
   appToken,
@@ -68,8 +68,8 @@ const socketClient = new SocketModeClient({
 })
 const webClient = new WebClient(botToken, { agent })
 
-register(socketClient, webClient, channel, text)
+register({ socketClient, webClient, logger, channel, text })
 ;(async () => {
   const res = await socketClient.start()
-  l.info(res)
+  logger.info(res)
 })()

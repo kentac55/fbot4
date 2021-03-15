@@ -1,43 +1,37 @@
-import { Block, WebClient } from '@slack/web-api'
+import { WebClient } from '@slack/web-api'
 import { SocketModeClient } from '@slack/socket-mode'
+import { Logger } from 'pino'
 
 import { Message } from './event'
 import { EventKind, EventAPIKind } from './kind'
+
 import {
-  CallStartView,
-  ChannelArchivedNotification,
-  ChannelCreatedNotification,
-  ChannelDeletedNotification,
-  ChannelRenamedNotification,
-  ChannelUnarchivedNotification,
-  DSMMessage,
-  DSMView,
-  EmojiAddedNotification,
-  EmojiRemovedNotification,
-  Hello,
-  HelloPickView,
-  HelloWorld,
-  HomeTabBlock,
-  Invite3,
-  Invite4,
-  MemberJoinedNotification,
-  MemberLeftNotification,
-  QuizView,
-  QuizView2,
-  QuizView3,
-  SelfIntroduceView,
-  SimpleTextBlock,
-  StartMsg,
-  UndeletableView,
-} from './msg'
-import { getUniqueElems, sleep } from './util'
-import {
-  getEengineerDialogues,
-  getGamerDialogues,
-  getJavascriptDialogues,
-  getこどおじDialogues,
-  get陰キャDialogues,
-} from './dialogue'
+  AppHomeOpendController,
+  BlockActionsController,
+  ChannelArchiveController,
+  ChannelCreatedController,
+  ChannelDeletedController,
+  ChannelRenameController,
+  ChannelUnarchiveController,
+  DSMController,
+  EmojiChangedController,
+  HelloController,
+  MemberJoinedChannelController,
+  MemberLeftChannelController,
+  MessageActionController,
+  ShortcutController,
+  UnregisteredController,
+  ViewSubmissionController,
+} from './controller'
+
+type Options = {
+  webClient: WebClient
+  logger: Logger
+  defaults: {
+    text: string
+    channel: string
+  }
+}
 
 type ListenerFnArg<T extends EventKind> = {
   body: Message<T>
@@ -49,527 +43,226 @@ type ListnerFn<T extends EventKind> = (arg: ListenerFnArg<T>) => Promise<void>
 
 type Handler<T extends EventKind> = [T, ListnerFn<T>]
 
-type HandlerFactory<T extends EventKind> = (options: {
-  webClient: WebClient
-  channel: string
-  text: string
-}) => Handler<T>
+type RouterFactory<T extends EventKind> = (options: Options) => Handler<T>
 
-const messageHandler: HandlerFactory<'message'> = () => [
+const messageHandler: RouterFactory<'message'> = () => [
   'message',
-  async ({ body, ack }: ListenerFnArg<'message'>): Promise<void> => {
-    console.log(body.event.text)
-    // l.info(body)
-    try {
-      await ack()
-      // await webClient.chat.postMessage({
-      //   channel: 'C0BQ8GW78',
-      //   blocks: exampleBlock({ name: 'aaaa' }),
-      // })
-    } catch (e) {
-      console.error(e)
-    }
+  async ({ ack }: ListenerFnArg<'message'>): Promise<void> => {
+    await ack()
   },
 ]
 
-const buildHello = (pattern: string, userId: string): Block[] => {
-  switch (pattern) {
-    case 'エンジニア': {
-      return Hello({
-        userId,
-        target: 'エンジニア',
-        dialogues: getUniqueElems(getEengineerDialogues(), 5),
-        text: '',
-      })
-    }
-    case '陰キャ': {
-      return Hello({
-        userId,
-        target: '陰キャ',
-        dialogues: getUniqueElems(get陰キャDialogues(), 5),
-        text: '',
-      })
-    }
-    case 'こどおじ': {
-      return Hello({
-        userId,
-        target: 'こどおじ',
-        dialogues: getUniqueElems(getこどおじDialogues(), 5),
-        text: '',
-      })
-    }
-    case 'javascript': {
-      return Hello({
-        userId,
-        target: 'エンジニア(javascript)',
-        dialogues: getUniqueElems(getJavascriptDialogues(), 5),
-        text: '',
-      })
-    }
-    case 'ゲーマー': {
-      return Hello({
-        userId,
-        target: 'ゲーマー',
-        dialogues: getUniqueElems(getGamerDialogues(), 5),
-        text: '',
-      })
-    }
-    default: {
-      return Hello({
-        userId,
-        target: 'ユーザー',
-        dialogues: [
-          'エンジニア',
-          '陰キャ',
-          'こどおじ',
-          'javascript',
-          'ゲーマー',
-        ].map((x) => ({
-          s: `\`/挨拶 ${x}\``,
-        })),
-        text: 'へるぷみー',
-      })
-    }
-  }
-}
-
-const interactiveHandler: HandlerFactory<'interactive'> = ({
-  webClient,
-  channel,
-  text,
-}) => [
+const interactiveRouter: RouterFactory<'interactive'> = (options) => [
   'interactive',
   async ({ body, ack }: ListenerFnArg<'interactive'>) => {
-    await ack()
-    switch (body.type) {
-      case 'shortcut': {
-        switch (body.callback_id) {
-          case 'hello': {
-            console.log('hello')
-            // webClient.views.open({
-            //   trigger_id: body.trigger_id,
-            //   view: HelloView(),
-            // })
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: HelloPickView(),
-            })
-            break
-          }
-          case 'self_introduce': {
-            console.log('self_introduce')
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: SelfIntroduceView(),
-            })
-            break
-          }
-          case 'dsm': {
-            console.log('dsm executed')
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: DSMView(),
-            })
-            break
-          }
-          case 'start': {
-            console.log('start executed')
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: CallStartView(),
-            })
-          }
-          default: {
-            console.log(`unregistered callback: ${body.callback_id}`)
-            console.log(body)
-          }
+    try {
+      await ack()
+      switch (body.type) {
+        case 'shortcut': {
+          await ShortcutController({ ...options, body })
+          break
         }
-        break
-      }
-      case 'view_submission': {
-        console.log('view_submission')
-        switch (body.view.external_id) {
-          case 'DSM': {
-            await webClient.chat.postMessage({
-              channel:
-                body.view.state.values.dsmConvSelect.dsmConvAction
-                  .selected_conversation,
-              text,
-              blocks: DSMMessage({
-                users: body.view.state.values.dsmSelect.dsmSelectAction.selected_options.map(
-                  (x) => x.text.text
-                ),
-              }),
-            })
-            break
-          }
-          case 'hello': {
-            await webClient.chat.postMessage({
-              channel,
-              text,
-              blocks: buildHello(
-                body.view.state.values.helloPick.helloPickAction.selected_option
-                  .value || 'help',
-                body.user.id
-              ),
-            })
-            break
-          }
-          case 'ad': {
-            console.log(
-              body.view.state.values.conv.select.selected_conversation
-            )
-            await webClient.chat.postMessage({
-              channel: body.view.state.values.conv.select.selected_conversation,
-              text,
-              blocks: StartMsg(),
-            })
-            break
-          }
-          case 'quizResult1': {
-            console.log('quiz-a')
-            await sleep(1000)
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: QuizView2({
-                meta: body.view.state.values.quizSelect.quizAction.selected_options
-                  .map((o) => o.text.text)
-                  .join(','),
-              }),
-            })
-            break
-          }
-          case 'ans': {
-            console.log('ans')
-            await sleep(1000)
-            await webClient.views.open({
-              trigger_id: body.trigger_id,
-              view: QuizView3({
-                ans: body.view.private_metadata.split(','),
-              }),
-            })
-            break
-          }
-          default: {
-            console.log(body)
-            const _: never = body.view
-            return _
-          }
+        case 'view_submission': {
+          await ViewSubmissionController({
+            ...options,
+            body,
+          })
+          break
         }
-        break
-      }
-      case 'block_actions': {
-        console.log('block_actions')
-        body.actions.forEach(async (action) => {
-          switch (action.action_id) {
-            case 'ktkr': {
-              console.log('ktkr')
-              await webClient.views.open({
-                trigger_id: body.trigger_id,
-                view: QuizView(),
-              })
-              break
-            }
-            case 'getResultAction': {
-              console.log('getResultAction')
-              await webClient.views.update({
-                external_id: body.view.external_id,
-                view: QuizView3({
-                  ans: body.view.private_metadata?.split(',') ?? [],
-                }),
-              })
-              break
-            }
-            case 'yes': {
-              // webClient.chat.postEphemeral({
-              //   user: body.user.id,
-              //   channel: body.container.channel_id,
-              //   text,
-              //   blocks: Invite(),
-              // })
-              await webClient.views.open({
-                trigger_id: body.trigger_id,
-                view: Invite3(),
-              })
-              break
-            }
-            case 'no': {
-              await webClient.views.open({
-                trigger_id: body.trigger_id,
-                view: Invite4(),
-              })
-              // webClient.chat.postEphemeral({
-              //   user: body.user.id,
-              //   channel: body.container.channel_id,
-              //   text,
-              //   blocks: Invite2(),
-              // })
-              break
-            }
-            default: {
-              console.log(`unregistered: ${action.action_id}`)
-            }
-          }
-        })
-        break
-      }
-      case 'message_action': {
-        console.log('message action')
-        switch (body.callback_id) {
-          case 'bomb': {
-            if (body.message.bot_profile?.name === 'fbot4') {
-              await webClient.chat.delete({
-                channel: body.channel.id,
-                ts: body.message.ts,
-              })
-            } else {
-              await webClient.views.open({
-                trigger_id: body.trigger_id,
-                view: UndeletableView(),
-              })
-            }
-            break
-          }
-          default: {
-            console.log(`unregistered message action: ${body.callback_id}`)
-            console.log(body)
-          }
+        case 'block_actions': {
+          await BlockActionsController({
+            ...options,
+            body,
+          })
+          break
         }
-        break
+        case 'message_action': {
+          await MessageActionController({
+            ...options,
+            body,
+          })
+        }
+        default: {
+          options.logger.warn(`interactive + unknown`)
+          options.logger.debug(body)
+        }
       }
-      default: {
-        console.log(`interactive + unknown`)
-        console.log(body)
-      }
+    } catch (e) {
+      options.logger.error(e)
     }
   },
 ]
 
-const slashCommandHandler: HandlerFactory<'slash_commands'> = ({
-  webClient,
-  text,
-}) => [
+const slashCommandHandler: RouterFactory<'slash_commands'> = (options) => [
   'slash_commands',
   async ({ body, ack }: ListenerFnArg<'slash_commands'>) => {
     try {
-      if (body.command === '/挨拶') {
-        await webClient.chat.postMessage({
-          channel: body.channel_id,
-          text,
-          blocks: buildHello(body.text, body.user_id),
-        })
-        await ack()
-      } else {
-        await webClient.chat.postMessage({
-          channel: body.channel_id,
-          text,
-          blocks: SimpleTextBlock({
-            s: `unregistered slash command: ${body.command}`,
-          }),
-        })
-        await ack()
+      await ack()
+      const args = {
+        ...options,
+        body,
+      }
+      switch (body.command) {
+        case '/挨拶': {
+          await HelloController(args)
+          break
+        }
+        case '/dsm': {
+          await DSMController(args)
+          break
+        }
+        default: {
+          await UnregisteredController(args)
+        }
       }
     } catch (e) {
-      console.error(e)
+      options.logger.error(e)
     }
   },
 ]
 
-const emojiChangedHandler: HandlerFactory<'emoji_changed'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const emojiChangedHandler: RouterFactory<'emoji_changed'> = (options) => [
   'emoji_changed',
-  async ({ body, ack }: ListenerFnArg<'emoji_changed'>): Promise<void> => {
-    await ack()
-    const msgBase = Object.freeze({
-      channel,
-      as_user: true,
-      link_names: true,
-    })
-    if (body.event.subtype === 'add') {
-      const msg = {
-        text,
-        blocks: EmojiAddedNotification({
-          name: body.event.name,
-          url: body.event.value,
-        }),
-        ...msgBase,
-      }
-      await webClient.chat.postMessage(msg)
-    } else if (body.event.subtype === 'remove') {
-      body.event.names.forEach(
-        async (name: string): Promise<void> => {
-          const msg = {
-            text,
-            blocks: EmojiRemovedNotification({ name }),
-            ...msgBase,
-          }
-          await webClient.chat.postMessage(msg)
-        }
-      )
-    } else {
-      const _: never = body.event
-      new Error(_)
+  async ({ body, ack }: ListenerFnArg<'emoji_changed'>) => {
+    try {
+      await ack()
+      await EmojiChangedController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
     }
   },
 ]
 
-const channelArchiveHandler: HandlerFactory<'channel_archive'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const channelArchiveHandler: RouterFactory<'channel_archive'> = (options) => [
   'channel_archive',
   async ({ body, ack }: ListenerFnArg<'channel_archive'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: ChannelArchivedNotification({
-        channelId: body.event.channel,
-        userId: body.event.user,
-      }),
-    })
-    await ack()
+    try {
+      await ack()
+      await ChannelArchiveController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const channelCreatedHandler: HandlerFactory<'channel_created'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const channelCreatedHandler: RouterFactory<'channel_created'> = (options) => [
   'channel_created',
   async ({ body, ack }: ListenerFnArg<'channel_created'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: ChannelCreatedNotification({
-        channelId: body.event.channel.id,
-        userId: body.event.channel.creator,
-      }),
-    })
-    await ack()
+    try {
+      await ChannelCreatedController({
+        ...options,
+        body: body.event,
+      })
+      await ack()
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const channelDeletedHandler: HandlerFactory<'channel_deleted'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const channelDeletedHandler: RouterFactory<'channel_deleted'> = (options) => [
   'channel_deleted',
   async ({ body, ack }: ListenerFnArg<'channel_deleted'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: ChannelDeletedNotification({
-        channelName: body.event.channel,
-      }),
-    })
-    await ack()
+    try {
+      await ack()
+      await ChannelDeletedController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const channelRenameEventHandler: HandlerFactory<'channel_rename'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const channelRenameEventHandler: RouterFactory<'channel_rename'> = (
+  options
+) => [
   'channel_rename',
   async ({ body, ack }: ListenerFnArg<'channel_rename'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: ChannelRenamedNotification({
-        channelId: body.event.channel.id,
-      }),
-    })
-    await ack()
+    try {
+      await ack()
+      await ChannelRenameController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const channelUnarchiveEventHandler: HandlerFactory<'channel_unarchive'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const channelUnarchiveEventHandler: RouterFactory<'channel_unarchive'> = (
+  options
+) => [
   'channel_unarchive',
   async ({ body, ack }: ListenerFnArg<'channel_unarchive'>) => {
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: ChannelUnarchivedNotification({
-        channelId: body.event.channel,
-        userId: body.event.user,
-      }),
-    })
-    await ack()
+    try {
+      await ack()
+      await ChannelUnarchiveController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const memberJoinedChannelEventHandler: HandlerFactory<'member_joined_channel'> = ({
-  text,
-  webClient,
-}) => [
+const memberJoinedChannelEventHandler: RouterFactory<'member_joined_channel'> = (
+  options
+) => [
   'member_joined_channel',
   async ({ body, ack }: ListenerFnArg<'member_joined_channel'>) => {
-    const self = (await webClient.auth.test()) as {
-      ok: boolean
-      url: string
-      user: string
-      team_id: string
-      user_id: string
+    try {
+      await ack()
+      await MemberJoinedChannelController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
     }
-
-    await webClient.chat.postMessage(
-      body.event.user === self.user_id
-        ? {
-            channel: body.event.channel,
-            text,
-            blocks: HelloWorld(),
-          }
-        : {
-            channel: body.event.channel,
-            text,
-            blocks: MemberJoinedNotification({ userId: body.event.user }),
-          }
-    )
-    await ack()
   },
 ]
 
-const memberLeftChannelEventHandler: HandlerFactory<'member_left_channel'> = ({
-  channel,
-  text,
-  webClient,
-}) => [
+const memberLeftChannelEventHandler: RouterFactory<'member_left_channel'> = (
+  options
+) => [
   'member_left_channel',
   async ({ body, ack }: ListenerFnArg<'member_left_channel'>) => {
-    console.log('valid')
-    await webClient.chat.postMessage({
-      channel,
-      text,
-      blocks: MemberLeftNotification({
-        userId: body.event.user,
-      }),
-    })
-    await ack()
+    try {
+      await ack()
+      await MemberLeftChannelController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
-const appHomeOpenedEventHandler: HandlerFactory<'app_home_opened'> = ({
-  webClient,
-}) => [
+const appHomeOpenedEventHandler: RouterFactory<'app_home_opened'> = (
+  options
+) => [
   'app_home_opened',
   async ({ body, ack }: ListenerFnArg<'app_home_opened'>) => {
-    // console.log(body)
-    await webClient.views.publish({
-      user_id: body.event.user,
-      view: HomeTabBlock(),
-    })
-    await ack()
+    try {
+      await ack()
+      await AppHomeOpendController({
+        ...options,
+        body: body.event,
+      })
+    } catch (e) {
+      options.logger.error(e)
+    }
   },
 ]
 
@@ -582,21 +275,28 @@ const handlers = [
   channelRenameEventHandler,
   channelUnarchiveEventHandler,
   emojiChangedHandler,
-  interactiveHandler,
+  interactiveRouter,
   memberJoinedChannelEventHandler,
   memberLeftChannelEventHandler,
   messageHandler,
   slashCommandHandler,
 ]
 
-export const register = (
-  socketClient: SocketModeClient,
-  webClient: WebClient,
-  channel: string,
+export const register = ({
+  socketClient,
+  webClient,
+  logger,
+  channel,
+  text,
+}: {
+  socketClient: SocketModeClient
+  webClient: WebClient
+  logger: Logger
+  channel: string
   text: string
-): void => {
+}): void => {
   handlers
-    .map((x) => x({ webClient, channel, text }))
+    .map((x) => x({ webClient, logger, defaults: { channel, text } }))
     // なんか知らんけどspread演算子使うとtype error
     // .forEach((x) => socketClient.on(...x)
     .forEach((x) => socketClient.on(x[0], x[1]))

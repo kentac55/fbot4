@@ -13,11 +13,11 @@ export type Message<T> = T extends EventAPIKind
   : T extends 'interactive'
   ? { type: InteractiveKind } & InteractivePayload
   : T extends 'slash_commands'
-  ? SlashCommandPayload
+  ? SlashCommandBody
   : T extends 'block_actions'
-  ? BlockActionsPayload
+  ? BlockActionsBody
   : T extends 'view_closed'
-  ? ModalCancelPayload
+  ? ModalCancelBody
   : never
 
 type EventMessage<T> = {
@@ -58,51 +58,51 @@ type ChannelWithCreator = Channel & {
   creator: string
 }
 
-type ChannelArchiveEvent = EventType & {
+export type ChannelArchiveEvent = EventType & {
   type: 'channel_archive'
   channel: string
   user: string
 }
 
-type ChannelCreatedEvent = EventType & {
+export type ChannelCreatedEvent = EventType & {
   type: 'channel_created'
   channel: ChannelWithCreator
 }
 
-type ChannelDeletedEvent = EventType & {
+export type ChannelDeletedEvent = EventType & {
   type: 'channel_deleted'
   channel: string
 }
 
-type ChannelHistoryChangedEvent = EventType & {
+export type ChannelHistoryChangedEvent = EventType & {
   type: 'channel_history_changed'
   latest: string
   ts: string
   event_ts: string
 }
 
-type ChannelJoindEvent = EventType & {
+export type ChannelJoindEvent = EventType & {
   type: 'channel_joined'
   channel: ChannelWithCreator
 }
 
-type ChannelLeftEvent = EventType & {
+export type ChannelLeftEvent = EventType & {
   type: 'channel_left'
   channel: string
 }
 
-type ChannelMarkedEvent = EventType & {
+export type ChannelMarkedEvent = EventType & {
   type: 'channel_marked'
   channel: string
   ts: string
 }
 
-type ChannelRenameEvent = EventType & {
+export type ChannelRenameEvent = EventType & {
   type: 'channel_rename'
   channel: Channel
 }
 
-type ChannelUnarchiveEvent = EventType & {
+export type ChannelUnarchiveEvent = EventType & {
   type: 'channel_unarchive'
   channel: string
   user: string
@@ -130,9 +130,9 @@ type EmojiRemoveEvent = EmojiEventCommon & {
   names: string[]
 }
 
-type EmojiEvent = EmojiAddEvent | EmojiRemoveEvent
+export type EmojiEvent = EmojiAddEvent | EmojiRemoveEvent
 
-type MemberJoinedChannelEvent = EventType & {
+export type MemberJoinedChannelEvent = EventType & {
   type: 'member_joined_channel'
   user: string
   channel: string
@@ -141,7 +141,7 @@ type MemberJoinedChannelEvent = EventType & {
   inviter?: string
 }
 
-type MemberLeftChannelEvent = EventType & {
+export type MemberLeftChannelEvent = EventType & {
   type: 'member_left_channel'
   user: string
   channel: string
@@ -177,7 +177,7 @@ type Edited = {
   ts: string
 }
 
-type SlashCommandPayload = {
+export type SlashCommandBody = {
   channel_id: string
   channel_name: string
   command: string
@@ -191,7 +191,7 @@ type SlashCommandPayload = {
   user_name: string
 }
 
-type AppHomeOpenedEvent = EventType & {
+export type AppHomeOpenedEvent = EventType & {
   type: 'app_home_opened'
   user: string
   channel: string
@@ -207,10 +207,10 @@ type User = {
 }
 
 type InteractivePayload =
-  | BlockActionsPayload
-  | MessageActionPayload
-  | ShortCutPayload
-  | ViewSubmissionPayload
+  | BlockActionsBody
+  | MessageActionBody
+  | ShortcutBody
+  | ViewSubmissionBody
 
 type Container = {
   type: string
@@ -219,7 +219,7 @@ type Container = {
   is_ephemeral: boolean
 }
 
-type BlockActionsPayload = {
+export type BlockActionsBody = {
   type: 'block_actions'
   trigger_id: string
   response_url: string
@@ -233,7 +233,7 @@ type BlockActionsPayload = {
   view: View
 }
 
-type MessageActionPayload = {
+export type MessageActionBody = {
   type: 'message_action'
   token: string
   action_ts: string
@@ -277,7 +277,7 @@ type MessageActionPayload = {
   }
 }
 
-type ShortCutPayload = {
+export type ShortcutBody = {
   type: 'shortcut'
   token: string
   action_ts: string
@@ -289,7 +289,7 @@ type ShortCutPayload = {
   trigger_id: string
 }
 
-type ViewSubmissionPayload = {
+export type ViewSubmissionBody = {
   type: 'view_submission'
   team: {
     // eventにはnameがあるがこっちにはない
@@ -307,7 +307,7 @@ type ViewSubmissionPayload = {
   trigger_id: string
 } & State
 
-type ModalCancelPayload = {
+type ModalCancelBody = {
   type: 'view_closed'
   team: {
     domain: string
@@ -320,7 +320,7 @@ type ModalCancelPayload = {
   view: View
 }
 
-type State = DSMState | HelloState | AdState | QuizState | AnsState
+type State = DSMState | HelloState | AdState | QuizState
 
 // https://api.slack.com/reference/block-kit/block-elements
 // https://api.slack.com/reference/interaction-payloads/block-actions
@@ -384,7 +384,7 @@ type AdState = {
 
 type QuizState = {
   view: {
-    external_id: 'quizResult1'
+    external_id: 'thinking'
     state: {
       values: {
         quizSelect: {
@@ -392,12 +392,5 @@ type QuizState = {
         }
       }
     }
-  }
-}
-
-type AnsState = {
-  view: {
-    external_id: 'ans'
-    private_metadata: string
   }
 }

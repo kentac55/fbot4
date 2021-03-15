@@ -1,0 +1,5 @@
+export { getEengineerDialogues } from './engineer'
+export { getGamerDialogues } from './gamer'
+export { getJavascriptDialogues } from './js'
+export { getこどおじDialogues } from './kodomobeya'
+export { get陰キャDialogues } from './darksider'
