@@ -20,5 +20,6 @@ export const MemberLeftChannelController: Controller<MemberLeftChannelEvent> = a
       },
     ],
     channel: defaults.channel,
+    text: '',
   })
 }

@@ -13,6 +13,7 @@ export const EmojiChangedController: Controller<EmojiEvent> = async ({
     as_user: true,
     link_names: true,
     channel: defaults.channel,
+    text: '',
   })
   if (body.subtype === 'add') {
     await webClient.chat.postMessage({

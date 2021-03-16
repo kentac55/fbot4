@@ -21,5 +21,6 @@ export const ChannelArchiveController: Controller<ChannelArchiveEvent> = async (
       },
     ],
     channel: defaults.channel,
+    text: '',
   })
 }

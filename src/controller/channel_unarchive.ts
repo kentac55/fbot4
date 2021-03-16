@@ -21,5 +21,6 @@ export const ChannelUnarchiveController: Controller<ChannelUnarchiveEvent> = asy
       },
     ],
     channel: defaults.channel,
+    text: '',
   })
 }

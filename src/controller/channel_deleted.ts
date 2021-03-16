@@ -20,5 +20,6 @@ export const ChannelDeletedController: Controller<ChannelDeletedEvent> = async (
       },
     ],
     channel: defaults.text,
+    text: '',
   })
 }

@@ -21,5 +21,6 @@ export const ChannelCreatedController: Controller<ChannelCreatedEvent> = async (
       },
     ],
     channel: defaults.channel,
+    text: '',
   })
 }

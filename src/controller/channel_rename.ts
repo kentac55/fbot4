@@ -20,5 +20,6 @@ export const ChannelRenameController: Controller<ChannelRenameEvent> = async ({
       },
     ],
     channel: defaults.channel,
+    text: '',
   })
 }

@@ -19,6 +19,7 @@ export const MemberJoinedChannelController: Controller<MemberJoinedChannelEvent>
 
   await webClient.chat.postMessage({
     channel: body.channel,
+    text: '',
     attachments: [
       body.user === self.user_id
         ? {
